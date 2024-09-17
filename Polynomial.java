@@ -1,71 +1,61 @@
-public class Polynomial{
-	//Fields
-	double [] poly; 
-	
-	//Methods
+
+public class Polynomial {
+	double [] coef ;
 	public Polynomial(){
-		poly = new double [1];
-		poly[0] = 0;
+		coef = new double [1];
+		coef[0] = 0;
 	}
-	public Polynomial(double [] px){
-		this.poly = px;
+
+	public Polynomial( double [] arr) {
+		int n = arr.length ;
+		coef = new double [n];
+		for(int i = 0; i < n ; i++) {
+			coef[i] = arr[i];
+		}
 	}
-	public Polynomial add( Polynomial p1){
-		int l1 = (p1.poly).length;
-		int l = (this.poly).length;
-		int min_len;
-		int max_len;
-		if (l1 <= l){
-			min_len = l1;
-			max_len = l;
-		}
-		else{
-			min_len = l;
-			max_len = l1;
-		}
-		double [] poly_res = new double[max_len];
-		
-		int idx = 0;
-		for (int i = 0; i < min_len ; i = i + 1){
-			poly_res[i] = (p1.poly)[i] + poly[i];
-			idx = i + 1;
-		}
-		if(l1 < l){
-			for (int i = idx; i < max_len ; i = i +1){
-				poly_res[i] = poly[i];
+	
+	public Polynomial add( Polynomial poly) {
+		int len_call = coef.length;
+		int len_arg = poly.coef.length;
+		if (len_call < len_arg) {
+			double [] p_res = new double[len_arg];
+			int i = 0;
+			for(i = 0 ; i < len_call ; i++) {
+				p_res[i] = poly.coef[i] + coef[i];
 			}
-		}
-		else{
-			for (int i = idx; i< max_len ; i = i +1){
-				poly_res[i] = (p1.poly)[i];
+			while(i<len_arg) {
+				p_res[i] = poly.coef[i];
+				i = i +1;
 			}
+			Polynomial res = new Polynomial(p_res);
+			return res;
 		}
-		Polynomial result = new Polynomial(poly_res);
-		return result;
+		else {
+			double [] p_res = new double[len_call];
+			int i = 0;
+			for(i = 0 ; i < len_arg ; i++) {
+				p_res[i] = poly.coef[i] + coef[i];
+			}
+			while(i<len_call) {
+				p_res[i] = coef[i];
+				i = i +1;
+			}
+			Polynomial res = new Polynomial(p_res);
+			return res;
+		}
 	}
-	public double evaluate(double x){
-		double mapto =0;
-		int idx = 0;
-		for (double coef:poly){
-			if (coef == 0){
-				idx = idx + 1;
-				continue;
-			}
-			double exp = 1;
-			for (int i = 1; i <= idx ; i = i + 1){
-				exp = exp * x;
-			}
-			mapto = mapto + coef * exp;
-			idx = idx + 1;
+	public double evaluate( double arg) {
+		double exp = 1;
+		int len_call = coef.length;
+		double res = 0;
+		for(int i = 0 ; i < len_call ; i++) {
+			res += coef[i] * exp;
+			exp = exp * arg;
 		}
-		return mapto;
+		return res;
 	}
-	public boolean hasRoot(double x){
-		if (evaluate(x) == 0){
-			return true;
-		}
-		else{
-			return false;
-		}
+	
+	public boolean hasRoot( double arg) {
+		return (this.evaluate(arg) == 0);
 	}
 }
