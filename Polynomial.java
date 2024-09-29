@@ -1,100 +1,199 @@
-public class Polynomial{
-	//Fields
-	double [] coef; 
-	int [] expo;
+import java.io.File;  // Import the File class
+import java.io.FileNotFoundException;  // Import this class to handle errors
+import java.util.Scanner; // Import the Scanner class to read text files
+import java.io.FileWriter;   // Import the FileWriter class
+import java.io.BufferedWriter;
+import java.io.IOException;  // Import the IOException class to handle errors
+
+public class Polynomial {
+	double [] coef ;
+	int [] exp;
 	
-	//Methods
 	public Polynomial(){
 		coef = new double [0];
-		
-		expo = new int [0] ;
+		exp = new int [0];
 	}
-	public Polynomial(double [] coef, int [] expo){
-		this.coef = coef;
-		this.expo = expo;
+
+	public Polynomial( double [] arr_coef, int [] arr_exp) {
+		coef = arr_coef;
+		exp = arr_exp;
 	}
-	public Polynomial add( Polynomial p1){
-		int idx = 0;
-		int idx_1 = 0;
-		int l1 = (p1.poly).length;
-		int l = (this.poly).length;
-		
-		int min_len;
-		int max_len;
-		if (l1 <= l){
-			min_len = l1;
-			max_len = l;
+	
+	public Polynomial(File myfile) {
+		try {
+		      Scanner myReader = new Scanner(myfile);
+		      String data = myReader.nextLine();
+		      myReader.close();
+		      Polynomial p = StringToPolynomial(data);
+		      coef = p.coef;
+		      exp = p.exp;
+		    } catch (FileNotFoundException e) {
+		      System.out.println("File Not Found. An error occurred.");
+		      e.printStackTrace();
+		    }
+	}
+	
+	private static int FindMaxArray(int []arr) {
+		int len = arr.length ;
+		if(len == 0) {
+			return 0;
 		}
-		else{
-			min_len = l;
-			max_len = l1;
-		}
-		
-		double [] coefx_res = new double[max_len];
-		int [] expox_res = new expo[max_len];
-		
-		int res_len = 0;
-		int idx_iter = 0;
-		int idx1_iter = 0;
-		for (int i = 0; i < (max_len + min_len) ; i = i + 1){
-			if ( ((idx1_iter < l1) && ((p1.expo)[idx1_iter] == i)) ||( (idx_iter < l) && (expo[idx_iter] == i)) ){
-				coefx_res[res_len] = 0;
-				expox_res[res_len] = i;
-				if ((idx1_iter < l1) && ((p1.expo)[idx1_iter] == i)){
-					coefx_res[res_len] += (p1.coef)[idx1_iter];
-					idx1_iter += 1;
-				}
-				if ((idx_iter < l) && (expo[idx_iter] == i)){
-					coefx_res[res_len] += coef[idx_iter];
-					idx_iter += 1;
-				}
-			}
-			res_len += 1;
-		}
-		
-		
-		
-		int idx = 0;
-		for (int i = 0; i < min_len ; i = i + 1){
-			poly_res[i] = (p1.poly)[i] + poly[i];
-			idx = i + 1;
-		}
-		if(l1 < l){
-			for (int i = idx; i < max_len ; i = i +1){
-				poly_res[i] = poly[i];
+		int max = arr[0];
+		for(int i = 0 ; i < len ; i = i + 1) {
+			if (arr[i] > max) {
+				max = arr[i];
 			}
 		}
-		else{
-			for (int i = idx; i< max_len ; i = i +1){
-				poly_res[i] = (p1.poly)[i];
+		return max;
+	}
+	
+	private static int HowManyNonZero(double [] arr, int len_arr) {
+		int  len = 0;
+		for(int i = 0; i < len_arr ; i = i + 1) {
+			if(arr[i] != 0) {
+				len = len + 1;
 			}
 		}
-		Polynomial result = new Polynomial(poly_res);
-		return result;
+		return len;
 	}
-	public double evaluate(double x){
-		double mapto =0;
-		int idx = 0;
-		for (double coef:poly){
-			if (coef == 0){
-				idx = idx + 1;
+	
+	private static Polynomial NonZeroPolynomial(double [] coef_temp, int deg_temp) {
+		int len = Polynomial.HowManyNonZero(coef_temp, deg_temp + 1);
+		
+		int [] exp_res = new int [len];
+		double [] coef_res = new double [len];
+		
+		int j = 0;
+		for(int i = 0; i < deg_temp + 1 ; i = i + 1) {
+			if(coef_temp[i] != 0) {
+				exp_res[j] = i;
+				coef_res[j] = coef_temp[i];
+				j = j + 1;
+			}
+		}
+		return new Polynomial(coef_res, exp_res);
+	}
+	
+	public Polynomial add( Polynomial poly) {
+		int deg_this = Polynomial.FindMaxArray(this.exp);
+		int deg_poly = Polynomial.FindMaxArray(poly.exp);
+		int deg_res;
+		if(deg_this < deg_poly) {
+			deg_res = deg_poly;
+		}
+		else {
+			deg_res = deg_this;
+		}
+		double [] coef_temp = new double [deg_res + 1];
+		
+		for(int i = 0; i < (this.exp).length ; i = i + 1) {
+			coef_temp[(this.exp)[i]] = (this.coef)[i];
+		}
+		for(int i = 0; i < (poly.exp).length ; i = i + 1) {
+			coef_temp[(poly.exp)[i]] += (poly.coef)[i];
+		}
+		
+		Polynomial res = Polynomial.NonZeroPolynomial(coef_temp, deg_res);
+		
+		return res;
+	}
+	
+	private double expo(double arg, int expn) {
+		double res = 1;
+		for(int i = 0 ; i < expn ; i = i + 1) {
+			res = res * arg;
+		}
+		return res;
+	}
+	
+	public double evaluate( double arg) {
+		int len_call = coef.length;
+		double res = 0;
+		for(int i = 0 ; i < len_call ; i = i + 1) {
+			res = res + coef[i] * expo(arg, exp[i]) ;
+		}
+		return res;
+	}
+	
+	public boolean hasRoot( double arg) {
+		return (this.evaluate(arg) == 0);
+	}
+	
+	public Polynomial multiply(Polynomial p) {
+		int deg_this = Polynomial.FindMaxArray(this.exp);
+		int deg_poly = Polynomial.FindMaxArray(p.exp);
+		int deg_res = deg_this + deg_poly;
+		double [] coef_temp = new double [deg_res + 1];
+		
+		for(int i= 0 ; i < (this.coef).length; i = i + 1 ) {
+			for(int j = 0 ; j < (p.coef).length ; j = j + 1) {
+				coef_temp[(this.exp)[i]+(p.exp)[j]] += (this.coef)[i] * (p.coef)[j];
+			}
+		}
+		Polynomial res = Polynomial.NonZeroPolynomial(coef_temp, deg_res);
+		return res;
+	}
+	
+	private String CheckCoef(double arg) {
+		if (arg >= 0) {
+			return "+";
+		}
+		return "";
+	}
+	
+	@Override
+	public String toString() {
+		int len = coef.length;
+		if(len == 0) {
+			return "";
+		}
+		String res;
+		
+		if(exp[0] > 0) {
+			res = Double.toString(coef[0]) + "x" + Integer.toString(exp[0]) ;
+		}
+		else {
+			res = Double.toString(coef[0]);
+		}
+		
+		for(int i = 1 ; i < len ; i = i + 1) {
+			if(exp[i] == 0) {
+				res = res + CheckCoef(coef[i]) + Double.toString(coef[i]);
 				continue;
 			}
-			double exp = 1;
-			for (int i = 1; i <= idx ; i = i + 1){
-				exp = exp * x;
-			}
-			mapto = mapto + coef * exp;
-			idx = idx + 1;
+			res = res + CheckCoef(coef[i]) + Double.toString(coef[i]);
+			res = res + "x" +  Integer.toString(exp[i]);
 		}
-		return mapto;
+		
+		return res;
 	}
-	public boolean hasRoot(double x){
-		if (evaluate(x) == 0){
-			return true;
+	
+	public static Polynomial StringToPolynomial(String s) {
+		String[] terms = s.split("(?=[+-])");
+		int poly_len = terms.length;
+		int [] p_exp = new int [poly_len ];
+		double [] p_coef = new double [poly_len ];
+		
+		for(int i = 0; i < poly_len  ; i = i + 1) {
+			String term = terms[i];
+			String [] part = term.split("x");
+			p_coef[i] = Double.parseDouble(part[0]);
+			if(part.length == 1) {
+				p_exp[i] = 0;
+				continue;
+			}
+			p_exp[i] = Integer.parseInt(part[1]);
 		}
-		else{
-			return false;
-		}
+		Polynomial p = new Polynomial(p_coef, p_exp);
+		return p;
+	}
+	
+	public void saveToFile(String fileName) {
+		String content = this.toString();
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+			writer.write(content);
+		} catch (IOException e) {
+			e.printStackTrace();
+			}
 	}
 }
